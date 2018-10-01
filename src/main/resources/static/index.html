@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Event</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="jquery-2.2.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+        function redirectToGoogleOAuthEndpoint() {
+            var authorization_endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+            var client_id = '695118585168-r23vg72a46o0i8rb0mvf1fai0sipq8is.apps.googleusercontent.com';
+            var redirect_uri = 'http://localhost:8081/callback';
+            var scope = 'https://www.googleapis.com/auth/calendar';
+            var access_type = 'online';
+            var state = "state";   //random string or encoded hash of the session cookie
+            var response_type = 'code';
+
+            var auth_endpoint_url = authorization_endpoint + '?' +
+                                    'scope=' + scope + '&' +
+                                    'access_type=' + access_type + '&' +
+                                    'state=' + state + '&' +
+                                    'redirect_uri=' + redirect_uri + '&' +
+                                    'response_type=' + response_type + '&' +
+                                    'client_id=' + client_id ;
+
+            window.location.href = auth_endpoint_url;
+        }
+
+        function addEventToGoogleCalendar(){
+            var eventDetails = {
+                calendarId: document.getElementById("email").value,
+                title: document.getElementById("eventTitle").value,
+                description: document.getElementById("eventDesc").value,
+                location: document.getElementById("location").value,
+                startDateTime: new Date(document.getElementById("startDateTime").value).toISOString(),
+                endDateTime: new Date(document.getElementById("endDateTime").value).toISOString()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:8081/addEvent',
+                data: eventDetails
+            }).done(function(data){
+                console.log('done');
+                console.log(data);
+
+                alert('Event successfully added to the Google Calendar.');
+            }).fail(function(data){
+                console.log('fail');
+                console.log(data);
+
+                alert('Event addition to the Google Calendar was not successful.');
+            })
+        }
+    </script>
+</head>
+<body>
+    <div align="center" class="container" style="width: 30%">
+        <h1>Create Event</h1>
+        <button id="calendar_access_grant_btn" type="button" class="btn btn-primary"
+                onclick = "redirectToGoogleOAuthEndpoint()" style="margin: 40px">Grant Access to Google Calendar</button>
+        <br>
+        <br>
+        <form>
+            <div class="form-group">
+                <label for="email">Email address:</label>
+                <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="eventTitle">Event Title:</label>
+                <input type="text" class="form-control" id="eventTitle">
+            </div>
+            <div class="form-group">
+                <label for="eventDesc">Event Description:</label>
+                <input type="text" class="form-control" id="eventDesc">
+            </div>
+            <div class="form-group">
+                <label for="location">Location:</label>
+                <input type="text" class="form-control" id="location">
+            </div>
+            <div class="form-group">
+                <label for="startDateTime">Start Date and Time:</label>
+                <input type="datetime-local" class="form-control" id="startDateTime" required>
+            </div>
+            <div class="form-group">
+                <label for="endDateTime">End Date and Time:</label>
+                <input type="datetime-local" class="form-control" id="endDateTime" required>
+            </div>
+            <!-- <div class="checkbox">
+                <label><input type="checkbox"> Remember me</label>
+            </div> -->
+            <button type="submit" onclick="addEventToGoogleCalendar()" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</body>
+</html>
