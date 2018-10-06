@@ -1,6 +1,7 @@
 package com.sliit.ssd.EventCreationApp.controllers;
 
 import com.sliit.ssd.EventCreationApp.models.Job;
+import com.sliit.ssd.EventCreationApp.models.Response;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -11,8 +12,11 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -51,6 +54,8 @@ public class EventController {
     public void callbackListener(HttpServletRequest request,
                                      HttpServletResponse response){
         String code = request.getParameter("code");
+
+        System.out.println("server state: " + request.getParameter("state"));
 
         httpclient = HttpClients.createDefault();
         httppost = new HttpPost(accessTokenEndpoint);
@@ -91,8 +96,8 @@ public class EventController {
         }
     }
 
-    @PostMapping("/addEvent")
-    public String addEventToGoogleCalendar(Job eventDetails){
+    @PostMapping(path = "/addEvent", produces = "application/json")
+    public @ResponseBody ResponseEntity<?> addEventToGoogleCalendar(Job eventDetails){
         httpclient = HttpClients.createDefault();
         httppost = new HttpPost("https://www.googleapis.com/calendar/v3/calendars/" +
                                     eventDetails.getCalendarId() + "/events?sendNotifications=True");
@@ -137,13 +142,14 @@ public class EventController {
         }
         catch (UnsupportedEncodingException e) {
             System.out.println("Unsupported Encoding Exception: " + e);
+            return ResponseEntity.badRequest().body(new Response(HttpStatus.CONFLICT));
         }
         catch (IOException e) {
             System.out.println("IO Exception: " + e);
+            return ResponseEntity.badRequest().body(new Response(HttpStatus.CONFLICT));
         }
 
-//        System.out.printf("Event created: %s\n", event.getHtmlLink());
-
-        return "success";
+        System.out.println("server successful");
+        return ResponseEntity.ok(new Response("successful event addition", json.getString("htmlLink"), HttpStatus.OK));
     }
 }

@@ -7,6 +7,17 @@
     <script src="jquery-2.2.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script>
+        function generateRandomString() {
+            var text = "";
+            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+            for (var i = 0; i < 10; i++)
+                text += characters.charAt(Math.floor(Math.random() * characters.length));
+
+            console.log(text);
+            return text;
+        }
+
         function redirectToGoogleOAuthEndpoint() {
             var authorization_endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
 
@@ -14,7 +25,7 @@
             var redirect_uri = 'http://localhost:8081/callback';
             var scope = 'https://www.googleapis.com/auth/calendar';
             var access_type = 'online';
-            var state = "state";   //random string or encoded hash of the session cookie
+            var state = generateRandomString();   //random string or encoded hash of the session cookie
             var response_type = 'code';
 
             var auth_endpoint_url = authorization_endpoint + '?' +
@@ -46,13 +57,18 @@
                 console.log('done');
                 console.log(data);
 
-                alert('Event successfully added to the Google Calendar.');
+                if (confirm("Event successfully added to the Google Calendar.\n" +
+                    "Do you want to view the created event in the Google Calendar?") == true) {
+                    window.location.href = data.htmlLink;
+                } else {
+                    document.getElementById("addEventForm").reset();
+                }
             }).fail(function(data){
                 console.log('fail');
                 console.log(data);
 
                 alert('Event addition to the Google Calendar was not successful.');
-            })
+            });
         }
     </script>
 </head>
@@ -63,7 +79,7 @@
                 onclick = "redirectToGoogleOAuthEndpoint()" style="margin: 40px">Grant Access to Google Calendar</button>
         <br>
         <br>
-        <form>
+        <form id="addEventForm">
             <div class="form-group">
                 <label for="email">Email address:</label>
                 <input type="email" class="form-control" id="email" required>
@@ -88,10 +104,7 @@
                 <label for="endDateTime">End Date and Time:</label>
                 <input type="datetime-local" class="form-control" id="endDateTime" required>
             </div>
-            <!-- <div class="checkbox">
-                <label><input type="checkbox"> Remember me</label>
-            </div> -->
-            <button type="submit" onclick="addEventToGoogleCalendar()" class="btn btn-primary">Submit</button>
+            <button type="button" onclick="addEventToGoogleCalendar()" class="btn btn-primary">Submit</button>
         </form>
     </div>
 </body>
